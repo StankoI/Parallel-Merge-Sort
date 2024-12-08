@@ -6,33 +6,113 @@
 
 #define PORT 2003
 
+// Клас за обработка на клиентската комуникация
+class Client
+{
+public:
+    Client(const std::string &server_ip, int port)
+    {
+        // Инициализиране на Winsock
+        WSADATA wsa_data;
+        if (WSAStartup(MAKEWORD(2, 0), &wsa_data) != 0)
+        {
+            std::cout << "Failed: WSAStartup()\n";
+            ExitProcess(EXIT_FAILURE);
+        }
+
+        // Създаване на сокет
+        server_socket = socket(AF_INET, SOCK_STREAM, 0);
+        if (server_socket == -1)
+        {
+            std::cout << "Failed: Create socket\n";
+            ExitProcess(EXIT_FAILURE);
+        }
+
+        // Подготовка на адреса на сървъра
+        addr.sin_family = AF_INET;
+        addr.sin_port = htons(port);
+        InetPton(AF_INET, server_ip.c_str(), &addr.sin_addr.s_addr);
+    }
+
+    ~Client()
+    {
+        // Затваряне на сокет и почистване на Winsock
+        closesocket(server_socket);
+        WSACleanup();
+    }
+
+    bool connectToServer()
+    {
+        if ((connect(server_socket, reinterpret_cast<SOCKADDR *>(&addr), sizeof(addr))) == -1)
+        {
+            std::cout << "Failed: Connect to server!\n";
+            return false;
+        }
+        return true;
+    }
+
+    bool sendData(const std::vector<int> &arr, size_t num_threads, size_t num_elements)
+    {
+        if (send(server_socket, (const char *)&num_threads, sizeof(num_threads), 0) == -1)
+        {
+            std::cout << "Failed: Send number of threads!\n";
+            return false;
+        }
+
+        if (send(server_socket, (const char *)&num_elements, sizeof(num_elements), 0) == -1)
+        {
+            std::cout << "Failed: Send number of elements!\n";
+            return false;
+        }
+
+        if (send(server_socket, (const char *)arr.data(), arr.size() * sizeof(arr[0]), 0) == -1)
+        {
+            std::cout << "Failed: Send array data!\n";
+            return false;
+        }
+
+        std::cout << "Messages sent!" << std::endl;
+        return true;
+    }
+
+    bool receiveData(std::vector<int> &arr, size_t num_elements)
+    {
+        if (recv(server_socket, (char *)arr.data(), num_elements * sizeof(arr[0]), 0) == 0)
+        {
+            std::cout << "Failed: recv from server!\n";
+            return false;
+        }
+
+        std::cout << "Received message from server.\nSorted array: \n";
+        return true;
+    }
+
+private:
+    SOCKET server_socket;
+    SOCKADDR_IN addr;
+};
+
+// Основен клас за сортиране (по избор)
+class Sorter
+{
+public:
+    static void printArray(const std::vector<int> &arr)
+    {
+        for (size_t i = 0; i < arr.size(); ++i)
+        {
+            std::cout << arr[i] << " ";
+        }
+        std::cout << std::endl;
+    }
+};
+
 int main()
 {
-    WSADATA wsa_data;
-    SOCKADDR_IN addr;
+    std::string server_ip = "127.0.0.1"; // Или IP на сървъра
+    Client client(server_ip, PORT);
 
-    if (WSAStartup(MAKEWORD(2, 0), &wsa_data) != 0)
+    if (!client.connectToServer())
     {
-        std::cout << "Failed: WSAStartup()\n";
-        ExitProcess(EXIT_FAILURE);
-    }
-
-    const SOCKET server = socket(AF_INET, SOCK_STREAM, 0);
-    if (server == -1)
-    {
-        std::cout << "Failed: Create socket\n";
-        ExitProcess(EXIT_FAILURE);
-    }
-
-    // InetPton(AF_INET, L"127.0.0.1", &addr.sin_addr.s_addr);
-    InetPton(AF_INET, "127.0.0.1", &addr.sin_addr.s_addr);
-
-    addr.sin_family = AF_INET;
-    addr.sin_port = htons(PORT);
-
-    if ((connect(server, reinterpret_cast<SOCKADDR *>(&addr), sizeof(addr))) == -1)
-    {
-        std::cout << "Failed: Connect to server!\n";
         ExitProcess(EXIT_FAILURE);
     }
 
@@ -41,53 +121,37 @@ int main()
     std::cin >> num_threads;
     std::cout << "Enter the number of array elements: ";
     std::cin >> num_elements;
+
     if (num_threads > num_elements || num_threads == 0)
     {
-        std::cout << "Fail: Threads are more than elements!\n";
-        closesocket(server);
+        std::cout << "Fail: Threads are more than elements or threads == 0!\n";
         ExitProcess(EXIT_FAILURE);
     }
-    else
-    {
-        int element;
-        std::vector<int> arr;
-        std::cout << "Enter " << num_elements << " numbers: ";
-        for (size_t i = 0; i < num_elements; i++)
-        {
-            std::cin >> element;
-            arr.push_back(element);
-        }
-        if ((send(server, (const char *)&num_threads, sizeof(num_threads), 0)) == -1)
-        {
-            std::cout << "Send to server number of threads!\n";
-            ExitProcess(EXIT_FAILURE);
-        }
-        if ((send(server, (const char *)&num_elements, sizeof(num_elements), 0)) == -1)
-        {
-            std::cout << "Send to server number of elements!\n";
-            ExitProcess(EXIT_FAILURE);
-        }
 
-        if ((send(server, (const char *)arr.data(), arr.size() * sizeof(arr[0]), 0)) == -1)
-        {
-            std::cout << "Send to server arr data!\n";
-            ExitProcess(EXIT_FAILURE);
-        }
-        std::cout << "Messages sent!" << std::endl;
-        if (recv(server, (char *)arr.data(), num_elements * sizeof(arr[0]), 0) == 0)
-        {
-            std::cout << "Fail: recv from server!";
-            ExitProcess(EXIT_FAILURE);
-        }
-        std::cout << "Sent message from server.\nSorted array: \n";
-        for (size_t i = 0; i < num_elements; i++)
-        {
-            std::cout << arr[i] << " ";
-        }
-        std::cout << std::endl;
+    // Въвеждане на елементите на масива
+    int element;
+    std::vector<int> arr;
+    std::cout << "Enter " << num_elements << " numbers: ";
+    for (size_t i = 0; i < num_elements; ++i)
+    {
+        std::cin >> element;
+        arr.push_back(element);
     }
-    closesocket(server);
-    WSACleanup();
-    std::cout << "Socket closed." << std::endl;
-    ExitProcess(EXIT_SUCCESS);
+
+    // Изпращане на данни към сървъра
+    if (!client.sendData(arr, num_threads, num_elements))
+    {
+        ExitProcess(EXIT_FAILURE);
+    }
+
+    // Получаване на сортирания масив от сървъра
+    if (!client.receiveData(arr, num_elements))
+    {
+        ExitProcess(EXIT_FAILURE);
+    }
+
+    // Печат на сортирания масив
+    Sorter::printArray(arr);
+
+    return 0;
 }
