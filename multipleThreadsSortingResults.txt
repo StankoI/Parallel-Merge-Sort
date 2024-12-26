@@ -1,0 +1,19 @@
+Процесор Intel(R) Core(TM) i-5-1035G1 CPU @ 1.00 GHz
+
+Сортиране на масив със 100000 елемента
+
+Single-threaded sort time: 12.2749 seconds
+Multi-threaded sort time (2 threads): 3.07301 seconds
+Multi-threaded sort time (3 threads): 1.46251 seconds
+Multi-threaded sort time (4 threads): 0.91665 seconds
+Multi-threaded sort time (5 threads): 0.791523 seconds
+Multi-threaded sort time (6 threads): 0.680313 seconds
+Multi-threaded sort time (7 threads): 0.546709 seconds
+Multi-threaded sort time (8 threads): 0.42031 seconds
+Multi-threaded sort time (9 threads): 0.407838 seconds
+Multi-threaded sort time (10 threads): 0.353024 seconds
+Multi-threaded sort time (12 threads): 0.295526 seconds
+Multi-threaded sort time (14 threads): 0.264996 seconds
+Multi-threaded sort time (16 threads): 0.23938 seconds
+Multi-threaded sort time (20 threads): 0.199134 seconds
+Multi-threaded sort time (32 threads): 0.140551 seconds

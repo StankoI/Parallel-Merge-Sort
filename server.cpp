@@ -12,7 +12,6 @@
 
 #define PORT 2003
 
-// Клас за работа със сортиране
 class Sorter
 {
 private:
@@ -109,7 +108,6 @@ private:
     }
 };
 
-// Клас за работа със сокет сървър
 class Server
 {
 public:
@@ -203,7 +201,6 @@ private:
             return;
         }
 
-        // Сортиране с нишки
         Sorter::insertionSortThreads(arr, numThreads);
 
         if (send(client, (const char *)arr.data(), arr.size() * sizeof(arr[0]), 0) == -1)
@@ -223,5 +220,26 @@ int main()
 {
     Server server;
     server.run();
+
+    // const size_t arraySize = 100000; // Размер на масива
+    // std::vector<int> array(arraySize);
+    // std::generate(array.begin(), array.end(), std::rand);
+
+    // std::vector<int> arrayCopy = array;
+
+    // auto startSingle = std::chrono::high_resolution_clock::now();
+    // Sorter::insertionSort(array, 0, array.size());
+    // auto endSingle = std::chrono::high_resolution_clock::now();
+    // std::chrono::duration<double> singleThreadDuration = endSingle - startSingle;
+
+    // std::cout << "Single-threaded sort time: " << singleThreadDuration.count() << " seconds\n";
+
+    // auto startMulti = std::chrono::high_resolution_clock::now();
+    // Sorter::insertionSortThreads(arrayCopy, 32); 
+    // auto endMulti = std::chrono::high_resolution_clock::now();
+    // std::chrono::duration<double> multiThreadDuration = endMulti - startMulti;
+
+    // std::cout << "Multi-threaded sort time (32 threads): " << multiThreadDuration.count() << " seconds\n";
+    
     return 0;
 }

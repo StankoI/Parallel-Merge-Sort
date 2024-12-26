@@ -3,16 +3,15 @@
 #include <vector>
 #include <WinSock2.h>
 #include <ws2tcpip.h>
+//g++ -o client.exe client.cpp -lws2_32
 
 #define PORT 2003
 
-// Клас за обработка на клиентската комуникация
 class Client
 {
 public:
     Client(const std::string &server_ip, int port)
     {
-        // Инициализиране на Winsock
         WSADATA wsa_data;
         if (WSAStartup(MAKEWORD(2, 0), &wsa_data) != 0)
         {
@@ -20,7 +19,6 @@ public:
             ExitProcess(EXIT_FAILURE);
         }
 
-        // Създаване на сокет
         server_socket = socket(AF_INET, SOCK_STREAM, 0);
         if (server_socket == -1)
         {
@@ -28,7 +26,6 @@ public:
             ExitProcess(EXIT_FAILURE);
         }
 
-        // Подготовка на адреса на сървъра
         addr.sin_family = AF_INET;
         addr.sin_port = htons(port);
         InetPton(AF_INET, server_ip.c_str(), &addr.sin_addr.s_addr);
@@ -36,7 +33,6 @@ public:
 
     ~Client()
     {
-        // Затваряне на сокет и почистване на Winsock
         closesocket(server_socket);
         WSACleanup();
     }
@@ -92,7 +88,6 @@ private:
     SOCKADDR_IN addr;
 };
 
-// Основен клас за сортиране (по избор)
 class Sorter
 {
 public:
@@ -108,7 +103,7 @@ public:
 
 int main()
 {
-    std::string server_ip = "127.0.0.1"; // Или IP на сървъра
+    std::string server_ip = "127.0.0.1"; // local host
     Client client(server_ip, PORT);
 
     if (!client.connectToServer())
@@ -128,7 +123,6 @@ int main()
         ExitProcess(EXIT_FAILURE);
     }
 
-    // Въвеждане на елементите на масива
     int element;
     std::vector<int> arr;
     std::cout << "Enter " << num_elements << " numbers: ";
@@ -138,19 +132,16 @@ int main()
         arr.push_back(element);
     }
 
-    // Изпращане на данни към сървъра
     if (!client.sendData(arr, num_threads, num_elements))
     {
         ExitProcess(EXIT_FAILURE);
     }
 
-    // Получаване на сортирания масив от сървъра
     if (!client.receiveData(arr, num_elements))
     {
         ExitProcess(EXIT_FAILURE);
     }
 
-    // Печат на сортирания масив
     Sorter::printArray(arr);
 
     return 0;
